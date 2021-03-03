@@ -1,0 +1,7 @@
+# Always check out text files with LF ending. This will maintain consistency for Windows developers and CI.
+* text=auto eol=lf
+# Treat files as binary for cleaner git history
+*.ipynb binary
+*.key binary
+*.pem binary
+*.svg binary

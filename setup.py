@@ -1,0 +1,59 @@
+# Copyright 2021 Edward Leardi. All Rights Reserved.
+#
+# Copyright 2020 IBM Corp. All Rights Reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+
+import pathlib
+import setuptools
+
+
+setuptools.setup(
+    name="nourish",
+    description="Consume and distribute datasets universally.",
+    long_description=pathlib.Path('README.rst').read_text(),
+    long_description_content_type="text/x-rst",
+    keywords="machine-learning data-mining data-science",
+    author="Edward Leardi",
+    license="Apache v2",
+    packages=setuptools.find_packages(),
+    data_files=[("", ["LICENSE"])],
+    python_requires=">=3.6",
+    install_requires=[
+        "dataclasses; python_version < '3.7.0'",  # backported dataclasses
+        "packaging >= 20.4",
+        "pandas >= 1.1.0",
+        "pydantic >= 1.7.2",
+        "PyYAML >= 5.3.1",
+        "requests >= 2.24.0"],
+    classifiers=[
+        "Development Status :: 3 - Alpha",
+        "Intended Audience :: Developers",
+        "License :: OSI Approved :: Apache Software License",
+        "Operating System :: OS Independent",
+        "Programming Language :: Python",
+        "Programming Language :: Python :: 3",
+        "Programming Language :: Python :: 3.6",
+        "Programming Language :: Python :: 3.7",
+        "Programming Language :: Python :: 3.8",
+        "Programming Language :: Python :: 3.9",
+        "Programming Language :: Python :: 3 :: Only",
+        "Programming Language :: Python :: Implementation :: CPython",
+        "Programming Language :: Python :: Implementation :: PyPy",
+        "Topic :: Scientific/Engineering",
+        "Topic :: Software Development :: Libraries",
+    ],
+    use_scm_version={'write_to': 'nourish/_version.py'},
+    setup_requires=['setuptools_scm']
+)
