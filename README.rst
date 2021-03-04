@@ -23,19 +23,19 @@ Nourish (Under Development)
    :alt: Gitter
 
 .. image:: https://github.com/edwardleardi/nourish/workflows/Runtime%20Tests/badge.svg
-   :target: https://github.com/edwardleardi/nourish/commit/master
+   :target: https://github.com/edwardleardi/nourish/commit/main
    :alt: Runtime Tests
 
 .. image:: https://github.com/edwardleardi/nourish/workflows/Lint/badge.svg
-   :target: https://github.com/edwardleardi/nourish/commit/master
+   :target: https://github.com/edwardleardi/nourish/commit/main
    :alt: Lint
 
 .. image:: https://github.com/edwardleardi/nourish/workflows/Docs/badge.svg
-   :target: https://github.com/edwardleardi/nourish/commit/master
+   :target: https://github.com/edwardleardi/nourish/commit/main
    :alt: Docs
 
 .. image:: https://github.com/edwardleardi/nourish/workflows/Development%20Environment/badge.svg
-   :target: https://github.com/edwardleardi/nourish/commit/master
+   :target: https://github.com/edwardleardi/nourish/commit/main
    :alt: Development Environment
 
 Nourish is a Python API that enables data consumers and distributors to easily use and share datasets, and establishes a
@@ -119,4 +119,4 @@ Notebooks
 
 For a more extensive look at Nourish functionality, check out these notebooks:
 
-* `Early Nourish Features Walkthrough <https://github.com/edwardleardi/nourish/blob/master/docs/notebooks/nourish-mvp-demo.ipynb>`__
+* `Early Nourish Features Walkthrough <https://github.com/edwardleardi/nourish/blob/main/docs/notebooks/nourish-mvp-demo.ipynb>`__

@@ -24,7 +24,7 @@ pypy3:
     - tox -vv -e pypy3
 
   only:
-    - master
+    - main
     - external_pull_requests
 
   # Allow this test to be canceled when a new commit is pushed
