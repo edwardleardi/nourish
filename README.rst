@@ -19,7 +19,7 @@ Nourish (Under Development)
    :alt: PyPI - Implementation
 
 .. image:: https://badges.gitter.im/edwardleardi/nourish.svg
-   :target: https://gitter.im/edwardleardi/nourish
+   :target: https://gitter.im/nourish-dev/community
    :alt: Gitter
 
 .. image:: https://github.com/edwardleardi/nourish/workflows/Runtime%20Tests/badge.svg
