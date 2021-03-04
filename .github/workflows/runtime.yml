@@ -19,7 +19,7 @@ name: Runtime Tests
 
 on:  # yamllint disable-line rule:truthy
   push:
-    branches: 'master'
+    branches: 'main'
   pull_request:
     branches: '*'
 
