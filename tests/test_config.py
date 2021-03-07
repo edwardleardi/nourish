@@ -15,7 +15,7 @@
 # limitations under the License.
 #
 
-# from urllib.parse import urlparse
+from urllib.parse import urlparse
 
 import pytest
 import requests.exceptions
@@ -28,12 +28,12 @@ from nourish._schema_retrieval import retrieve_schema_file
 class TestConfig:
     "Test the Config dataclass."
 
-    # def test_default_schema_url_https(self):
-    #     "Test the default schema URLs are https-schemed."
+    def test_default_schema_url_https(self):
+        "Test the default schema URLs are https-schemed."
 
-    #     assert urlparse(Config.DATASET_SCHEMA_URL).scheme == 'https'
-    #     assert urlparse(Config.FORMAT_SCHEMA_URL).scheme == 'https'
-    #     assert urlparse(Config.LICENSE_SCHEMA_URL).scheme == 'https'
+        assert urlparse(Config.DATASET_SCHEMA_URL).scheme == 'https'
+        assert urlparse(Config.FORMAT_SCHEMA_URL).scheme == 'https'
+        assert urlparse(Config.LICENSE_SCHEMA_URL).scheme == 'https'
 
     @pytest.mark.xfail(reason="default remote might be down but it's not this library's issue",
                        raises=requests.exceptions.ConnectionError)
