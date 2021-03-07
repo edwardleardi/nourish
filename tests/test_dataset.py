@@ -15,13 +15,10 @@
 # limitations under the License.
 #
 
-import copy
 import hashlib
-import json
 from json import JSONDecodeError
 import os
 import pathlib
-import tarfile
 
 import pandas as pd
 import pytest
@@ -107,17 +104,6 @@ class TestDataset:
         with pytest.raises(IOError) as e:
             Dataset(gmb_schema, data_dir=tmp_path, mode=Dataset.InitializationMode.DOWNLOAD_ONLY)
         assert 'the file may by corrupted' in str(e.value)
-
-    def test_invalid_tarball(self, tmp_path, gmb_schema, schema_file_https_url, schema_file_relative_dir):
-        "Test if Dataset class catches an invalid tar file."
-
-        fake_schema = gmb_schema
-        fake_schema['download_url'] = schema_file_https_url + '/datasets.yaml'
-        fake_schema['sha512sum'] = hashlib.sha512((schema_file_relative_dir / 'datasets.yaml').read_bytes()).hexdigest()
-
-        with pytest.raises(tarfile.ReadError) as e:
-            Dataset(fake_schema, data_dir=tmp_path, mode=Dataset.InitializationMode.DOWNLOAD_ONLY)
-        assert 'Failed to unarchive' in str(e.value)
 
     def test_load(self, downloaded_wikitext103_dataset):
         "Test basic loading functionality."
@@ -254,7 +240,7 @@ class TestDataset:
         assert dataset._data_dir == tmp_symlink_dir
 
     def test_is_downloaded(self, tmp_path, gmb_schema):
-        "Test is_downloaded method."
+        "Test is_downloaded method using a ``.tar.gz`` archive."
 
         data_dir = tmp_path / 'non-existing-dir'
         assert not data_dir.exists()  # Sanity check: data_dir must not exist
@@ -263,30 +249,6 @@ class TestDataset:
 
         gmb.download()
         assert gmb.is_downloaded() is True
-
-        # content of the file list
-        with open(gmb._file_list_file, mode='r') as f:
-            file_list = json.load(f)
-
-        def test_incorrect_file_list(change: dict):
-            "Test a single case that somewhere in the file list things are wrong."
-
-            wrong_file_list = copy.deepcopy(file_list)
-            wrong_file_list.update(change)
-            with open(gmb._file_list_file, mode='w') as f:
-                json.dump(wrong_file_list, f)
-            assert gmb.is_downloaded() is False
-
-        # Can't find a file
-        test_incorrect_file_list({'non-existing-file': {'type': int(tarfile.REGTYPE)}})
-        # File type incorrect
-        test_incorrect_file_list({'groningen_meaning_bank_modified': {'type': int(tarfile.REGTYPE)}})
-        test_incorrect_file_list({'groningen_meaning_bank_modified/LICENSE.txt': {'type': int(tarfile.DIRTYPE)}})
-        test_incorrect_file_list({'groningen_meaning_bank_modified/README.txt': {'type': int(tarfile.SYMTYPE)}})
-        # size incorrect
-        changed = copy.deepcopy(file_list['groningen_meaning_bank_modified/README.txt'])
-        changed['size'] += 100
-        test_incorrect_file_list({'groningen_meaning_bank_modified/README.txt': changed})
 
         # JSON decoding error
         gmb._file_list_file.write_text("nonsense\n", encoding='utf-8')

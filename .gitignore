@@ -144,6 +144,7 @@ docs/source/api-references
 
 ### nourish ###
 /nourish/_version.py
-/tests/datasets
+/tests/datasets/*
+!/tests/datasets/extractables
 /tests/doctests
 /tests/tls/test_ca_bundle.pem

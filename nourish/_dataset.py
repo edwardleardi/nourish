@@ -14,17 +14,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+# This file has been modified by Edward Leardi to support downloading & extracting new dataset formats
+#
 
 "Dataset downloading and loading functionality."
 
 
 from enum import IntFlag
 import hashlib
-import json
 import os
 import pathlib
 import shutil
-import tarfile
 from typing import Any, Callable, Dict, Iterable, Optional
 
 import requests
@@ -33,6 +33,7 @@ from . import typing as typing_
 from .loaders import FormatLoaderMap
 from .loaders._format_loader_map import load_data_files
 from .schema import SchemaDict
+from ._extractors import extract_data_files, verify_data_files
 from ._lock import DirectoryLock
 
 
@@ -146,7 +147,6 @@ class Dataset:
         :raises NotADirectoryError: :attr:`Dataset._data_dir` (passed in via ``data_dir`` in the constructor
             :class:`Dataset`) points to an existing file that is not a directory.
         :raises OSError: The SHA512 checksum of a downloaded dataset doesn't match the expected checksum.
-        :raises tarfile.ReadError: The tar archive was unable to be read.
         :raises exceptions.DirectoryLockAcquisitionError: Failed to acquire the directory lock.
         """
 
@@ -170,23 +170,7 @@ class Dataset:
                               f'which is different from the expected SHA512 checksum of: ({actual_hash}) '
                               f'the file may by corrupted.')
 
-            # Supports tar archives only for now
-            try:
-                tar = tarfile.open(archive_fp)
-            except tarfile.ReadError as e:
-                raise tarfile.ReadError(f'Failed to unarchive "{archive_fp}"\ncaused by:\n{e}')
-            with tar:
-                members = {}
-                for member in tar.getmembers():
-                    members[member.name] = {'type': int(member.type)}
-                    if member.isreg():  # For regular files, we also save its size
-                        members[member.name]['size'] = member.size
-                with open(self._file_list_file, mode='w') as f:
-                    # We do not specify 'utf-8' here to match the default encoding used by the OS, which also likely
-                    # uses this encoding for accessing the filesystem.
-                    json.dump(members, f, indent=2)
-                tar.extractall(path=self._data_dir)
-
+            extract_data_files(path=archive_fp, data_dir=self._data_dir, file_list_file=self._file_list_file)
             os.remove(archive_fp)
 
     def load(self,
@@ -282,24 +266,4 @@ class Dataset:
             # File not found, may not have finished downloading at all and we treat it as so. We can't control users'
             # own tweaking with the directory.
             return False
-        with open(self._file_list_file_, mode='r') as file_list:
-            for name, info in json.load(file_list).items():
-                path = self._data_dir / name
-                if not path.exists():
-                    # At least one file in the file list is missing
-                    return False
-                # We don't have pathlib type code that matches tarfile type code. We instead do an incomplete list of
-                # type comparison. We don't do uncommon types such as FIFO, character device, etc. here.
-                if info['type'] == int(tarfile.REGTYPE):  # Regular file
-                    if not path.is_file():
-                        return False
-                    if path.stat().st_size != info['size']:
-                        return False
-                elif info['type'] == int(tarfile.DIRTYPE) and not path.is_dir():  # Directory type
-                    return False
-                elif info['type'] == int(tarfile.SYMTYPE) and not path.is_symlink():  # Symbolic link type
-                    return False
-                else:
-                    # We just let go any file types that we don't understand.
-                    pass
-        return True
+        return verify_data_files(data_dir=self._data_dir, file_list_file=self._file_list_file_)
