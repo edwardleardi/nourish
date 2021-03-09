@@ -29,6 +29,9 @@ GITTER_ROOM_ID = os.getenv('room-id')
 GITTER_TEXT = os.getenv('text')
 GIT_REF = os.getenv('GITHUB_REF')
 GIT_SHA = os.getenv('GITHUB_SHA')
+GITHUB_REPOSITORY = os.getenv('GITHUB_REPOSITORY')
+GITHUB_SERVER_URL = os.getenv('GITHUB_SERVER_URL')
+GITHUB_RUN_ID = os.getenv('GITHUB_RUN_ID')
 
 headers = {
     'Content-Type': 'application/json',
@@ -36,6 +39,11 @@ headers = {
     'Authorization': f"Bearer {GITTER_TOKEN}",
 }
 
-data = f'{{"text":"{GIT_REF}:{GIT_SHA}: {GITTER_TEXT}"}}'
+data = (
+    f'{{"text":"**{GITHUB_REPOSITORY}**\\n\\n'
+    f'{GITTER_TEXT}\\n'
+    f'{GIT_REF}:{GIT_SHA}\\n'
+    f'{GITHUB_SERVER_URL}/{GITHUB_REPOSITORY}/actions/runs/{GITHUB_RUN_ID}"}}'
+)
 
 response = requests.post(f'https://api.gitter.im/v1/rooms/{GITTER_ROOM_ID}/chatMessages', headers=headers, data=data)
