@@ -38,6 +38,10 @@ Nourish (Under Development)
    :target: https://github.com/edwardleardi/nourish/commit/main
    :alt: Development Environment
 
+.. image:: https://coveralls.io/repos/github/edwardleardi/nourish/badge.svg?branch=main
+   :target: https://coveralls.io/github/edwardleardi/nourish?branch=main
+   :alt: Coverage
+
 Nourish is a Python API that enables data consumers and distributors to easily use and share datasets, and establishes a
 standard for exchanging data assets. It enables:
 
