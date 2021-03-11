@@ -52,8 +52,8 @@ Install all required development packages:
 
    $ pip install -U -r requirements-dev.txt
 
-Run Tests
----------
+Tests & CI
+----------
 
 Run All Tests
 ~~~~~~~~~~~~~
@@ -110,8 +110,19 @@ To run document generation tests, run:
 
    $ tox -e docs
 
+Continuous Integration (CI)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+We prefer keeping CI configuration files, namely :file:`.github/workflows/*` and :file:`.gitlab-ci.yml`, simple and unscrambled.
+Normally, only test environment, such as Python version, OS and tox environmental variables, or anything that is
+specific to the CI system, such as failure notification. Complicated test dependencies and other test dealings should go
+to :file:`tox.ini` and their respective test files in :file:`tests/`.
+
+Development
+-----------
+
 Where to Expose a Symbol (Function, Class, etc.)?
--------------------------------------------------
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Generally speaking:
 
@@ -129,23 +140,15 @@ Please keep in mind that the criteria above are not meant to be rigid: They shou
 factors such as where existing symbols are placed and other potentially important considerations (if any).
 
 Where to Import a Symbol?
--------------------------
+~~~~~~~~~~~~~~~~~~~~~~~~~
 
 When referencing a symbol that is exposed to a user, in general, we prefer importing the symbol from where the package
 publicly exposes it over importing from where the source code of the symbol is defined, e.g., use ``from .schema import
 SchemaDict`` rather than ``from ._schema import SchemaDict``. This way we have more code paths that would go through
 what the user would actually experience and hopefully would give us more chances to discover bugs.
 
-Continuous Integration (CI)
----------------------------
-
-We prefer keeping CI configuration files, namely :file:`.github/workflows/*` and :file:`.gitlab-ci.yml`, simple and unscrambled.
-Normally, only test environment, such as Python version, OS and tox environmental variables, or anything that is
-specific to the CI system, such as failure notification. Complicated test dependencies and other test dealings should go
-to :file:`tox.ini` and their respective test files in :file:`tests/`.
-
 Docs
-----
+~~~~
 
 The easiest way to generate the docs is to run the ``tox`` docs test environment. The html index file generates at
 :file:`.tox/docs/out/index.html`:
@@ -180,7 +183,7 @@ The reST code style compliance is also checked by the ``tox`` lint test environm
    $ tox -e lint
 
 Dependency Version Pinning Policy
----------------------------------
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 We should pin the versions of all Python packages that we are using solely for testing and doc generating for a stable
 test and doc env (e.g., future incompatibility, regression, etc.). We want to pin these because, in this project, we use
@@ -195,3 +198,20 @@ latest versions of our dependencies, we should either work around them, or updat
 those versions.
 
 .. _Renovate: https://github.com/apps/renovate
+
+Pull Request & Issues
+---------------------
+
+Developer's Certificate of Origin (DCO)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+To ensure licensing criteria are followed, Nourish requires all contributors to agree to the Developer Certificate of Origin
+(DCO). The DCO is an attestation attached to every contribution made by every developer. In the commit message of the
+contribution, the developer simply adds a ``Signed-off-by: Name <Email>`` statement and thereby agrees to the DCO. 
+
+The DCO is a commitment that the contributor has the right to submit the patch per the license. The DCO agreement can be found
+at `http://developercertificate.org/ <http://developercertificate.org/>`__.
+
+The DCO sign-off can either be added manually to your commit body, or you can add either ``-s`` or ``--signoff`` to your usual
+Git commit commands. If you forget to add the sign-off you can amend a previous commit with the sign-off by running
+``git commit --amend -s``.
