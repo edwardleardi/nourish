@@ -199,6 +199,19 @@ those versions.
 
 .. _Renovate: https://github.com/apps/renovate
 
+Releases & Publishing to PyPI
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+To make a new release:
+
+- Tag the commit following `PEP 0440 <https://www.python.org/dev/peps/pep-0440>`__, e.g., ``1.0``, ``0.1b0``.
+- Run ``python setup.py sdist bdist_wheel``.
+
+To publish to PyPI:
+
+- Once a release is pushed, :file:`.github/workflows/publish-to-pypi.yml` will automatically upload it to PyPI.
+- However to manually upload, run ``twine upload -r pypi dist/nourish-x.x*``.
+
 Pull Request & Issues
 ---------------------
 
