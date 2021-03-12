@@ -68,7 +68,7 @@ To install the latest version of Nourish, run
 
 .. code-block:: console
 
-   $ pip install -U git+https://github.com/edwardleardi/nourish
+   $ pip install nourish
 
 Alternatively, if you have downloaded the source, switch to the source directory (same directory as this README file,
 ``cd /path/to/nourish-source``) and run
