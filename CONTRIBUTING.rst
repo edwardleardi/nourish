@@ -210,7 +210,7 @@ To make a new release:
 
 To publish to PyPI:
 
-- When a full release is created, :file:`.github/workflows/publish-to-pypi.yml` will automatically upload it to PyPI.
+- When a full release (not a pre-release) is published, :file:`.github/workflows/publish-to-pypi.yml` will automatically upload the release to PyPI.
 - However to manually upload a release, run ``python setup.py sdist bdist_wheel`` then ``twine upload -r pypi dist/nourish-x.x*``.
 
 Pull Request & Issues
