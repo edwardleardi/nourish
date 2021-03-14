@@ -33,11 +33,11 @@ class Config:
     # Default schema URLs
     # TODO: The types below should be typing_.PathLike. However, pydantic does not play well with os.PathLike for
     # validation. Will have to fix it in another occasion.
-    DATASET_SCHEMA_URL: Union[str, pathlib.Path] = \
+    DATASET_SCHEMATA_URL: Union[str, pathlib.Path] = \
         'https://raw.githubusercontent.com/edwardleardi/nourish-schemata/main/datasets.yaml'
-    FORMAT_SCHEMA_URL: Union[str, pathlib.Path] = \
+    FORMAT_SCHEMATA_URL: Union[str, pathlib.Path] = \
         'https://raw.githubusercontent.com/edwardleardi/nourish-schemata/main/formats.yaml'
-    LICENSE_SCHEMA_URL: Union[str, pathlib.Path] = \
+    LICENSE_SCHEMATA_URL: Union[str, pathlib.Path] = \
         'https://raw.githubusercontent.com/edwardleardi/nourish-schemata/main/licenses.yaml'
 
     # DATADIR is the default dir where datasets files are downloaded/loaded to/from.

@@ -98,12 +98,14 @@ class TestExtractors:
             file_list = json.load(f)
         assert file_list['type'] == extractable_type
 
-    def test_unsupported_file_extensions(self, tmp_path, gmb_schema, schema_file_https_url, schema_file_relative_dir):
+    def test_unsupported_file_extensions(self, tmp_path, gmb_schema,
+                                         schemata_file_https_url, schemata_file_relative_dir):
         "Test if Dataset class catches an unsupported filetype (flat files like ``.yaml`` currently unsupported)."
 
         fake_schema = gmb_schema
-        fake_schema['download_url'] = schema_file_https_url + '/datasets.yaml'
-        fake_schema['sha512sum'] = hashlib.sha512((schema_file_relative_dir / 'datasets.yaml').read_bytes()).hexdigest()
+        fake_schema['download_url'] = schemata_file_https_url + '/datasets.yaml'
+        fake_schema['sha512sum'] = \
+            hashlib.sha512((schemata_file_relative_dir / 'datasets.yaml').read_bytes()).hexdigest()
 
         with pytest.raises(RuntimeError) as e:
             Dataset(fake_schema, data_dir=tmp_path, mode=Dataset.InitializationMode.DOWNLOAD_ONLY)

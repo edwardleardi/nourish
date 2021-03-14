@@ -54,7 +54,7 @@ class Dataset:
     >>> from tempfile import TemporaryDirectory
     >>> import nourish
     >>> from nourish import schema
-    >>> dataset_schema = schema.DatasetSchema('./tests/schemata/datasets.yaml')
+    >>> dataset_schema = schema.DatasetSchemata('./tests/schemata/datasets.yaml')
     >>> jfk_schema_dict = dataset_schema.export_schema('datasets', 'noaa_jfk', '1.1.4')
     >>> jfk_data_dir = TemporaryDirectory()
     >>> jfk_dataset = Dataset(schema=jfk_schema_dict, data_dir=jfk_data_dir.name)
@@ -239,7 +239,7 @@ class Dataset:
                                f'{self.__class__.__name__}.download() to download data, call '
                                f'{self.__class__.__name__}.load() to load data.')
         # We don't copy here because it is too expensive and users may actually want to update the datasets and it
-        # doesn't cause security issues as in the Schema class
+        # doesn't cause security issues as in the BaseSchemata class
         return self._data
 
     def is_downloaded(self) -> bool:

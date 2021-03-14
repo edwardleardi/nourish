@@ -18,11 +18,11 @@
 "Schema parsing and loading functionality."
 
 
-from ._schema import DatasetSchema, FormatSchema, LicenseSchema, Schema, SchemaDict, SchemaManager
+from ._schema import DatasetSchemata, FormatSchemata, LicenseSchemata, BaseSchemata, SchemaDict, SchemataManager
 
-__all__ = ('DatasetSchema',
-           'FormatSchema',
-           'LicenseSchema',
-           'Schema',
+__all__ = ('DatasetSchemata',
+           'FormatSchemata',
+           'LicenseSchemata',
+           'BaseSchemata',
            'SchemaDict',
-           'SchemaManager')
+           'SchemataManager')

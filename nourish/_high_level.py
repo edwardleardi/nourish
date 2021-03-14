@@ -30,7 +30,7 @@ from packaging.version import parse as version_parser
 from ._config import Config
 from ._dataset import Dataset
 from . import typing as typing_
-from ._schema import Schema, SchemaDict, SchemaManager
+from ._schema import BaseSchemata, SchemaDict, SchemataManager
 
 # Global configurations --------------------------------------------------
 
@@ -45,13 +45,13 @@ def get_config() -> Config:
     Example:
 
     >>> get_config()
-    Config(DATASET_SCHEMA_URL=..., FORMAT_SCHEMA_URL=..., LICENSE_SCHEMA_URL=..., DATADIR=...)
+    Config(DATASET_SCHEMATA_URL=..., FORMAT_SCHEMATA_URL=..., LICENSE_SCHEMATA_URL=..., DATADIR=...)
     """
     return _global_config
 
 
-# The SchemaManager object that is managed by high-level functions
-_schemata: Optional[SchemaManager] = None
+# The SchemataManager object that is managed by high-level functions
+_schemata_manager: Optional[SchemataManager] = None
 
 
 def init(update_only: bool = True, **kwargs: Any) -> None:
@@ -60,15 +60,15 @@ def init(update_only: bool = True, **kwargs: Any) -> None:
 
     :param update_only: If ``True``, only update in the global configs what config is specified; reuse schemata loaded
         by high-level functions if URLs do not change. Otherwise, reset everything to default in global configs except
-        those specified as keyword arguments; clear all schemata loaded by high-level functions.
-    :param DATASET_SCHEMA_URL: The default dataset schema file URL.
-    :param FORMAT_SCHEMA_URL: The default format schema file URL.
-    :param LICENSE_SCHEMA_URL: The default license schema file URL.
+        those specified as keyword arguments; clear the schemata loaded by high-level functions.
+    :param DATASET_SCHEMATA_URL: The default dataset schema file URL.
+    :param FORMAT_SCHEMATA_URL: The default format schema file URL.
+    :param LICENSE_SCHEMATA_URL: The default license schema file URL.
     :param DATADIR: Default dataset directory to download/load to/from. The path can be either absolute or relative to
         the current working directory, but will be converted to the absolute path immediately in this function.
         Defaults to: :file:`~/.nourish/data`.
     """
-    global _global_config, _schemata
+    global _global_config, _schemata_manager
 
     if update_only:
         # We don't use dataclasses.replace here because it is uncertain whether it would work well with
@@ -78,7 +78,7 @@ def init(update_only: bool = True, **kwargs: Any) -> None:
         _global_config = Config(**prev)
     else:
         _global_config = Config(**kwargs)
-        _schemata = None
+        _schemata_manager = None
 
 
 init(update_only=False)
@@ -99,7 +99,7 @@ def list_all_datasets() -> Dict[str, Tuple]:
     {...'gmb': ('1.0.2',),... 'wikitext103': ('1.0.1',)...}
     """
 
-    dataset_schema = export_schemata().schemata['datasets'].export_schema('datasets')
+    dataset_schema = export_schemata_manager().schemata['datasets'].export_schema('datasets')
     return {
         outer_k: tuple(inner_k for inner_k, inner_v in outer_v.items())
         for outer_k, outer_v in dataset_schema.items()
@@ -186,9 +186,9 @@ def load_dataset(name: str, *,
     2 2010-01-01 03:00:00               5.0                33.0
     """
 
-    schemata = export_schemata().schemata['datasets']
-    schema = schemata.export_schema('datasets', name, version)
-    dataset_schema_name = schemata.export_schema().get('name', 'default')
+    dataset_schemata = export_schemata_manager().schemata['datasets']
+    schema = dataset_schemata.export_schema('datasets', name, version)
+    dataset_schema_name = dataset_schemata.export_schema().get('name', 'default')
 
     data_dir = get_config().DATADIR / dataset_schema_name / name / version
     dataset = Dataset(schema=schema, data_dir=data_dir, mode=Dataset.InitializationMode.LAZY)
@@ -229,7 +229,7 @@ def get_dataset_metadata(name: str, *, version: str = 'latest') -> SchemaDict:
                          'path': 'groningen_meaning_bank_modified/gmb_subset_full.txt'}}
     """
 
-    return export_schemata().schemata['datasets'].export_schema('datasets', name, version)
+    return export_schemata_manager().schemata['datasets'].export_schema('datasets', name, version)
 
 
 @_handle_name_param
@@ -254,9 +254,9 @@ def describe_dataset(name: str, *, version: str = 'latest') -> str:
     Available subdatasets: gmb_subset_full
     """
 
-    schema_manager = export_schemata()
-    dataset_schema = schema_manager.schemata['datasets'].export_schema('datasets', name, version)
-    license_schema = schema_manager.schemata['licenses'].export_schema('licenses')
+    schemata_manager = export_schemata_manager()
+    dataset_schema = schemata_manager.schemata['datasets'].export_schema('datasets', name, version)
+    license_schema = schemata_manager.schemata['licenses'].export_schema('licenses')
     return dedent(f'''
             Dataset name: {dataset_schema["name"]}
             Description: {dataset_schema["description"]}
@@ -270,65 +270,66 @@ def describe_dataset(name: str, *, version: str = 'latest') -> str:
 # Schemata --------------------------------------------------
 
 
-def export_schemata() -> SchemaManager:
-    """Return a copy of the :class:`schema.SchemaManager` object managed by high-level functions.
+def export_schemata_manager() -> SchemataManager:
+    """Return a copy of the :class:`schema.SchemataManager` object managed by high-level functions.
 
-    :return: A copy of the :class:`schema.SchemaManager` object
+    :return: A copy of the :class:`schema.SchemataManager` object
 
     Example:
 
-    >>> schema_manager = export_schemata()
-    >>> schema_manager.schemata
+    >>> schemata_manager = export_schemata_manager()
+    >>> schemata_manager.schemata
     {'datasets': ..., 'formats': ..., 'licenses':...}
     """
 
-    return deepcopy(_get_schemata())
+    return deepcopy(_get_schemata_manager())
 
 
-def load_schemata(*, force_reload: bool = False, tls_verification: Union[bool, typing_.PathLike] = True) -> None:
-    """Loads a :class:`schema.SchemaManager` object that stores all schemata. To export the loaded
-    :class:`schema.SchemaManager` object, please use :func:`export_schemata`.
+def load_schemata_manager(*, force_reload: bool = False,
+                          tls_verification: Union[bool, typing_.PathLike] = True) -> None:
+    """Loads a :class:`schema.SchemataManager` object that stores the schemata. To export the loaded
+    :class:`schema.SchemataManager` object, please use :func:`export_schemata_manager`.
 
     :param force_reload: If ``True``, force reloading even if the provided URLs by :func:`init` are the same as
          provided last time. Otherwise, only those that are different from previous given ones are reloaded.
-    :param tls_verification: Same as ``tls_verification`` in :class:`schema.Schema`.
-    :raises ValueError: See :class:`schema.Schema`.
-    :raises InsecureConnectionError: See :class:`schema.Schema`.
+    :param tls_verification: Same as ``tls_verification`` in :class:`schema.BaseSchemata`.
+    :raises ValueError: See :class:`schema.BaseSchemata`.
+    :raises InsecureConnectionError: See :class:`schema.BaseSchemata`.
 
     Example:
-    >>> load_schemata()
-    >>> loaded_schemata = export_schemata()
-    >>> loaded_schemata.schemata
+    >>> load_schemata_manager()
+    >>> loaded_schemata_manager = export_schemata_manager()
+    >>> loaded_schemata_manager.schemata
     {'datasets': ..., 'formats': ..., 'licenses':...}
     """
 
     urls = {
-        'datasets': get_config().DATASET_SCHEMA_URL,
-        'formats': get_config().FORMAT_SCHEMA_URL,
-        'licenses': get_config().LICENSE_SCHEMA_URL
+        'datasets': get_config().DATASET_SCHEMATA_URL,
+        'formats': get_config().FORMAT_SCHEMATA_URL,
+        'licenses': get_config().LICENSE_SCHEMATA_URL
     }
 
-    global _schemata
-    if force_reload or _schemata is None:  # Force reload or clean slate, create a new SchemaManager object
-        _schemata = SchemaManager(**{
-            name: Schema(url, tls_verification=tls_verification) for name, url in urls.items()})
+    global _schemata_manager
+    if force_reload or _schemata_manager is None:  # Force reload or clean slate, create a new SchemataManager object
+        _schemata_manager = SchemataManager(**{
+            name: BaseSchemata(url, tls_verification=tls_verification) for name, url in urls.items()})
     else:
-        for name, schema in _schemata.schemata.items():
+        for name, schema in _schemata_manager.schemata.items():
             if schema.retrieved_url_or_path != urls[name]:
-                _schemata.add_schema(name, Schema(urls[name], tls_verification=tls_verification))
+                _schemata_manager.add_schemata(name, BaseSchemata(urls[name], tls_verification=tls_verification))
 
 
-def _get_schemata() -> SchemaManager:
-    """Return the :class:`SchemaManager` object managed by high-level functions. If it is not created, create it. This
+def _get_schemata_manager() -> SchemataManager:
+    """Return the :class:`SchemataManager` object managed by high-level functions. If it is not created, create it. This
     function is used by high-level APIs but it should not be a high-level function itself. It should only be used
-    internally when the need to modify the managed :class`SchemaManager` object arises. It should not be exposed for the
-    same reason: users should not have this easy access to modify the managed :class`SchemaManager` object."""
+    internally when the need to modify the managed :class`SchemataManager` object arises. It should not be exposed for
+    the same reason: users should not have this easy access to modify the managed :class`SchemataManager` object."""
 
-    global _schemata
+    global _schemata_manager
 
-    load_schemata()
+    load_schemata_manager()
 
-    # The return value is guranteed to be SchemaManager instead of Optional[SchemaManager] after load_schemata
-    assert _schemata is not None  # nosec: We use assertion for code clarity and mypy detection of _schemata's type
+    # Return value is guranteed to be SchemataManager instead of Optional[SchemataManager] after load_schemata_manager
+    assert _schemata_manager is not None  # nosec: Use assert for clarity and mypy detection of _schemata_manager's type
 
-    return _schemata
+    return _schemata_manager

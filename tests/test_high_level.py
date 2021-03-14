@@ -24,11 +24,11 @@ from packaging.version import parse as version_parser
 import pytest
 from pydantic import ValidationError
 
-from nourish import (describe_dataset, export_schemata, get_config, get_dataset_metadata, init, list_all_datasets,
-                     load_dataset, load_schemata)
+from nourish import (describe_dataset, export_schemata_manager, get_config, get_dataset_metadata, init,
+                     list_all_datasets, load_dataset, load_schemata_manager)
 from nourish.dataset import Dataset
 from nourish._config import Config
-from nourish._high_level import _get_schemata
+from nourish._high_level import _get_schemata_manager
 
 # Global configurations --------------------------------------------------
 
@@ -86,9 +86,9 @@ class TestInit:
         assert dataclasses.asdict(get_config()) == dataclasses.asdict(Config())
 
         new_urls = {
-            'DATASET_SCHEMA_URL': 'some/local/file',
-            'FORMAT_SCHEMA_URL': 'file://c:/some/other/local/file',
-            'LICENSE_SCHEMA_URL': 'http://some/remote/file'
+            'DATASET_SCHEMATA_URL': 'some/local/file',
+            'FORMAT_SCHEMATA_URL': 'file://c:/some/other/local/file',
+            'LICENSE_SCHEMATA_URL': 'http://some/remote/file'
         }
         init(update_only=True, **new_urls)
 
@@ -174,7 +174,7 @@ class TestLoadDataset:
         init(DATADIR=tmp_path)
         data_dir = tmp_path / 'default' / 'gmb' / '1.0.2'
         gmb = Dataset(gmb_schema, data_dir=data_dir, mode=Dataset.InitializationMode.DOWNLOAD_AND_LOAD)
-        _get_schemata().schemata['datasets']._schema.pop('name')  # Remove the "name" key
+        _get_schemata_manager().schemata['datasets']._schemata.pop('name')  # Remove the "name" key
         gmb_data = load_dataset('gmb', version='1.0.2', download=False)
         assert gmb.data == gmb_data
 
@@ -210,7 +210,7 @@ def test_get_dataset_metadata():
     name, version = 'gmb', '1.0.2'
 
     gmb_schema = get_dataset_metadata(name, version=version)
-    assert gmb_schema == export_schemata().schemata['datasets'].export_schema('datasets', name, version)
+    assert gmb_schema == export_schemata_manager().schemata['datasets'].export_schema('datasets', name, version)
 
 
 def test_describe_dataset():
@@ -219,8 +219,8 @@ def test_describe_dataset():
     name, version = 'gmb', '1.0.2'
 
     gmb_description = describe_dataset(name, version=version)
-    dataset_schema = export_schemata().schemata['datasets'].export_schema('datasets', name, version)
-    license_schema = export_schemata().schemata['licenses'].export_schema('licenses')
+    dataset_schema = export_schemata_manager().schemata['datasets'].export_schema('datasets', name, version)
+    license_schema = export_schemata_manager().schemata['licenses'].export_schema('licenses')
 
     # Check a couple of spots
     assert dataset_schema['name'] in gmb_description
@@ -240,42 +240,45 @@ def test_describe_dataset():
 class TestSchemataFunctions:
     "Test the high-level schemata functions."
 
-    def test_load_schemata(self, loaded_schemata, schema_file_absolute_dir):
-        "Test high-level load_schemata function."
+    def test_load_schemata_manager(self, loaded_schemata_manager, schemata_file_absolute_dir):
+        "Test high-level load_schemata_manager function."
 
         init(update_only=False,
-             DATASET_SCHEMA_URL=loaded_schemata.schemata['datasets'].retrieved_url_or_path,
-             FORMAT_SCHEMA_URL=loaded_schemata.schemata['formats'].retrieved_url_or_path,
-             LICENSE_SCHEMA_URL=loaded_schemata.schemata['licenses'].retrieved_url_or_path)
-        load_schemata(force_reload=True)
+             DATASET_SCHEMATA_URL=loaded_schemata_manager.schemata['datasets'].retrieved_url_or_path,
+             FORMAT_SCHEMATA_URL=loaded_schemata_manager.schemata['formats'].retrieved_url_or_path,
+             LICENSE_SCHEMATA_URL=loaded_schemata_manager.schemata['licenses'].retrieved_url_or_path)
+        load_schemata_manager(force_reload=True)
         for name in ('datasets', 'formats', 'licenses'):
-            assert (_get_schemata().schemata[name].retrieved_url_or_path ==
-                    loaded_schemata.schemata[name].retrieved_url_or_path)
+            assert (_get_schemata_manager().schemata[name].retrieved_url_or_path ==
+                    loaded_schemata_manager.schemata[name].retrieved_url_or_path)
 
         init(update_only=True,
-             # Different from the previous relative path used in loaded_schemata
-             DATASET_SCHEMA_URL=schema_file_absolute_dir / 'datasets.yaml')
-        load_schemata(force_reload=False)
+             # Different from the previous relative path used in loaded_schemata_manager
+             DATASET_SCHEMATA_URL=schemata_file_absolute_dir / 'datasets.yaml')
+        load_schemata_manager(force_reload=False)
         for name in ('formats', 'licenses'):
-            assert (_get_schemata().schemata[name].retrieved_url_or_path ==
-                    loaded_schemata.schemata[name].retrieved_url_or_path)
-        assert _get_schemata().schemata['datasets'].retrieved_url_or_path == schema_file_absolute_dir / 'datasets.yaml'
+            assert (_get_schemata_manager().schemata[name].retrieved_url_or_path ==
+                    loaded_schemata_manager.schemata[name].retrieved_url_or_path)
+        assert (_get_schemata_manager().schemata['datasets'].retrieved_url_or_path ==
+               schemata_file_absolute_dir / 'datasets.yaml')
 
-    def test_export_schemata(self, schema_file_absolute_dir, schema_file_https_url):
+    def test_export_schemata_manager(self, schemata_file_absolute_dir, schemata_file_https_url):
         "Test high-level export-schemata function."
 
-        assert export_schemata() is not _get_schemata()
+        assert export_schemata_manager() is not _get_schemata_manager()
         # The two returned schemata should equal
-        assert (json.dumps(export_schemata().schemata['datasets'].export_schema(),
+        assert (json.dumps(export_schemata_manager().schemata['datasets'].export_schema(),
                            sort_keys=True, indent=2, default=str) ==
-                json.dumps(_get_schemata().schemata['datasets'].export_schema(), sort_keys=True, indent=2, default=str))
+                json.dumps(_get_schemata_manager().schemata['datasets'].export_schema(),
+                           sort_keys=True, indent=2, default=str))
 
         # Different from https url used by nourish_initialization autouse fixture
         new_urls = {
-            'DATASET_SCHEMA_URL': schema_file_absolute_dir / 'datasets.yaml',
-            'LICENSE_SCHEMA_URL': schema_file_absolute_dir / 'licenses.yaml'
+            'DATASET_SCHEMATA_URL': schemata_file_absolute_dir / 'datasets.yaml',
+            'LICENSE_SCHEMATA_URL': schemata_file_absolute_dir / 'licenses.yaml'
         }
         init(update_only=True, **new_urls)
-        assert export_schemata().schemata['formats'].retrieved_url_or_path == f'{schema_file_https_url}/formats.yaml'
-        assert export_schemata().schemata['datasets'].retrieved_url_or_path == new_urls['DATASET_SCHEMA_URL']
-        assert export_schemata().schemata['licenses'].retrieved_url_or_path == new_urls['LICENSE_SCHEMA_URL']
+        assert (export_schemata_manager().schemata['formats'].retrieved_url_or_path ==
+               f'{schemata_file_https_url}/formats.yaml')
+        assert export_schemata_manager().schemata['datasets'].retrieved_url_or_path == new_urls['DATASET_SCHEMATA_URL']
+        assert export_schemata_manager().schemata['licenses'].retrieved_url_or_path == new_urls['LICENSE_SCHEMATA_URL']
