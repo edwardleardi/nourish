@@ -61,9 +61,9 @@ def init(update_only: bool = True, **kwargs: Any) -> None:
     :param update_only: If ``True``, only update in the global configs what config is specified; reuse schemata loaded
         by high-level functions if URLs do not change. Otherwise, reset everything to default in global configs except
         those specified as keyword arguments; clear the schemata loaded by high-level functions.
-    :param DATASET_SCHEMATA_URL: The default dataset schema file URL.
-    :param FORMAT_SCHEMATA_URL: The default format schema file URL.
-    :param LICENSE_SCHEMATA_URL: The default license schema file URL.
+    :param DATASET_SCHEMATA_URL: The default dataset schemata file URL.
+    :param FORMAT_SCHEMATA_URL: The default format schemata file URL.
+    :param LICENSE_SCHEMATA_URL: The default license schemata file URL.
     :param DATADIR: Default dataset directory to download/load to/from. The path can be either absolute or relative to
         the current working directory, but will be converted to the absolute path immediately in this function.
         Defaults to: :file:`~/.nourish/data`.
@@ -99,10 +99,10 @@ def list_all_datasets() -> Dict[str, Tuple]:
     {...'gmb': ('1.0.2',),... 'wikitext103': ('1.0.1',)...}
     """
 
-    dataset_schema = export_schemata_manager().schemata['datasets'].export_schema('datasets')
+    dataset_schemas = export_schemata_manager().schemata['datasets'].export_schema('datasets')
     return {
         outer_k: tuple(inner_k for inner_k, inner_v in outer_v.items())
-        for outer_k, outer_v in dataset_schema.items()
+        for outer_k, outer_v in dataset_schemas.items()
     }
 
 
@@ -163,7 +163,7 @@ def load_dataset(name: str, *,
                  download: bool = True,
                  subdatasets: Union[Iterable[str], None] = None) -> Dict[str, Any]:
     """High level function that wraps :class:`dataset.Dataset` class's load and download functionality. Downloads to and
-    loads from directory: :file:`DATADIR/schema_name/name/version` where ``DATADIR`` is in
+    loads from directory: :file:`DATADIR/dataset_schemata_name/name/version` where ``DATADIR`` is in
     ``nourish.get_config().DATADIR``. ``DATADIR`` can be changed by calling :func:`init`.
 
     :param name: Name of the dataset you want to load from Nourish's available datasets. You can get a list of these
@@ -188,9 +188,9 @@ def load_dataset(name: str, *,
 
     dataset_schemata = export_schemata_manager().schemata['datasets']
     schema = dataset_schemata.export_schema('datasets', name, version)
-    dataset_schema_name = dataset_schemata.export_schema().get('name', 'default')
+    dataset_schemata_name = dataset_schemata.export_schema().get('name', 'default')
 
-    data_dir = get_config().DATADIR / dataset_schema_name / name / version
+    data_dir = get_config().DATADIR / dataset_schemata_name / name / version
     dataset = Dataset(schema=schema, data_dir=data_dir, mode=Dataset.InitializationMode.LAZY)
     if download and not dataset.is_downloaded():
         dataset.download()
@@ -256,13 +256,13 @@ def describe_dataset(name: str, *, version: str = 'latest') -> str:
 
     schemata_manager = export_schemata_manager()
     dataset_schema = schemata_manager.schemata['datasets'].export_schema('datasets', name, version)
-    license_schema = schemata_manager.schemata['licenses'].export_schema('licenses')
+    license_schemas = schemata_manager.schemata['licenses'].export_schema('licenses')
     return dedent(f'''
             Dataset name: {dataset_schema["name"]}
             Description: {dataset_schema["description"]}
             Size: {dataset_schema["estimated_size"]}
             Published date: {dataset_schema["published"]}
-            License: {license_schema[dataset_schema["license"]]["name"]}
+            License: {license_schemas[dataset_schema["license"]]["name"]}
             Available subdatasets: {", ".join(dataset_schema["subdatasets"].keys())}
     ''').strip()
 
@@ -314,8 +314,8 @@ def load_schemata_manager(*, force_reload: bool = False,
         _schemata_manager = SchemataManager(**{
             name: BaseSchemata(url, tls_verification=tls_verification) for name, url in urls.items()})
     else:
-        for name, schema in _schemata_manager.schemata.items():
-            if schema.retrieved_url_or_path != urls[name]:
+        for name, schemata in _schemata_manager.schemata.items():
+            if schemata.retrieved_url_or_path != urls[name]:
                 _schemata_manager.add_schemata(name, BaseSchemata(urls[name], tls_verification=tls_verification))
 
 

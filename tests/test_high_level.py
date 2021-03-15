@@ -263,7 +263,7 @@ class TestSchemataFunctions:
                schemata_file_absolute_dir / 'datasets.yaml')
 
     def test_export_schemata_manager(self, schemata_file_absolute_dir, schemata_file_https_url):
-        "Test high-level export-schemata function."
+        "Test high-level export_schemata_manager function."
 
         assert export_schemata_manager() is not _get_schemata_manager()
         # The two returned schemata should equal

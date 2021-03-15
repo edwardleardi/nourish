@@ -34,7 +34,7 @@ SchemaDict = Dict[str, Any]
 class BaseSchemata(ABC):
     """Abstract class that provides functionality to load and export the contents of a schemata file.
 
-    :param url_or_path: URL or path to a schema file.
+    :param url_or_path: URL or path to a schemata file.
     :param tls_verification: When set to ``True``, verify the remote link is https and whether the TLS certificate is
         valid. When set to a path to a file, use this file as a CA bundle file. When set to ``False``, allow http links
         and do not verify any TLS certificates. Ignored if ``url_or_path`` is a local path.
@@ -49,27 +49,28 @@ class BaseSchemata(ABC):
         self._schemata: SchemaDict = self._load_retrieved_schemata(
                                             retrieve_schemata_file(url_or_path, tls_verification=tls_verification))
 
-        # The URL or path from which the schema was retrieved
+        # The URL or path from which the schemata was retrieved
         self._retrieved_url_or_path: Union[typing_.PathLike, str] = url_or_path
 
-    def _load_retrieved_schemata(self, schema: str) -> SchemaDict:
+    def _load_retrieved_schemata(self, schemata: str) -> SchemaDict:
         """Safely loads retrieved schemata file.
 
-        :param schema: Retrieved schemata object.
-        :return: Nested dictionary representation of a schema.
+        :param schemata: Retrieved schemata object.
+        :return: Nested dictionary representation of a schemata.
         """
-        return yaml.safe_load(schema)
+        return yaml.safe_load(schemata)
 
     def export_schema(self, *keys: str) -> SchemaDict:
-        """Returns a copy of a loaded schema. Should be used for debug purposes only.
+        """Returns a copy of a loaded schemata. Typically used to export a schema contained within the schemata.
 
-        :param keys: The sequence of keys that leads to the portion of the schema to be exported.
-        :return: Copy of the schema dictionary.
+        :param keys: The sequence of keys that leads to the portion of the schemata to be exported.
+        :return: Copy of the schemata dictionary.
 
         Example:
 
-        >>> schema = DatasetSchemata('./tests/schemata/datasets.yaml')
-        >>> schema.export_schema('datasets', 'noaa_jfk', '1.1.4')
+        >>> dataset_schemata = DatasetSchemata('./tests/schemata/datasets.yaml')
+        >>> jfk_schema = dataset_schemata.export_schema('datasets', 'noaa_jfk', '1.1.4')
+        >>> jfk_schema
         {'name': 'NOAA Weather Data – JFK Airport'...}
         """
         schema: SchemaDict = self._schemata
@@ -83,34 +84,34 @@ class BaseSchemata(ABC):
 
         Example:
 
-        >>> schema = DatasetSchemata('./tests/schemata/datasets.yaml')
-        >>> schema.retrieved_url_or_path
+        >>> dataset_schemata = DatasetSchemata('./tests/schemata/datasets.yaml')
+        >>> dataset_schemata.retrieved_url_or_path
         './tests/schemata/datasets.yaml'
         """
         return self._retrieved_url_or_path
 
 
 class DatasetSchemata(BaseSchemata):
-    """Dataset schema class that inherits functionality from :class:`BaseSchemata`.
+    """Dataset schemata class that inherits functionality from :class:`BaseSchemata`.
     """
 
-    # We have this class here because we reserve the potential to put specific dataset schema code here
+    # We have this class here because we reserve the potential to put specific dataset schemata code here
     pass
 
 
 class FormatSchemata(BaseSchemata):
-    """Format schema class that inherits functionality from :class:`BaseSchemata`.
+    """Format schemata class that inherits functionality from :class:`BaseSchemata`.
     """
 
-    # We have this class here because we reserve the potential to put specific format schema code here
+    # We have this class here because we reserve the potential to put specific format schemata code here
     pass
 
 
 class LicenseSchemata(BaseSchemata):
-    """License schema class that inherits functionality from :class:`BaseSchemata`.
+    """License schemata class that inherits functionality from :class:`BaseSchemata`.
     """
 
-    # We have this class here because we reserve the potential to put specific license schema code here
+    # We have this class here because we reserve the potential to put specific license schemata code here
     pass
 
 
@@ -121,11 +122,11 @@ class SchemataManager():
 
     Example:
 
-    >>> dataset_schema = DatasetSchemata('./tests/schemata/datasets.yaml')
-    >>> schema_manager = SchemataManager(datasets=dataset_schema)
-    >>> licenses_schema = LicenseSchemata('./tests/schemata/licenses.yaml')
-    >>> schema_manager.add_schemata('licenses', licenses_schema)
-    >>> schema_manager.schemata
+    >>> dataset_schemata = DatasetSchemata('./tests/schemata/datasets.yaml')
+    >>> schemata_manager = SchemataManager(datasets=dataset_schemata)
+    >>> license_schemata = LicenseSchemata('./tests/schemata/licenses.yaml')
+    >>> schemata_manager.add_schemata('licenses', license_schemata)
+    >>> schemata_manager.schemata
     {'datasets':..., 'licenses':...}
     """
 
@@ -137,8 +138,8 @@ class SchemataManager():
             self.add_schemata(name, val)
 
     def add_schemata(self, name: str, val: BaseSchemata) -> None:
-        """Store schema instance in a dictionary. If a schema with the same name as ``name`` is already stored, it is
-        overridden.
+        """Store schemata instance in a dictionary. If a schemata with the same name as ``name`` is already stored,
+        it is overridden.
 
         :param name: Schemata name.
         :param val: BaseSchemata instance.

@@ -39,10 +39,10 @@ class TestBaseSchemata:
 
 
 class TestSchemata:
-    "Test the functionality of the schema classes."
+    "Test the functionality of the schemata classes."
 
     def test_loading_schemata(self, loaded_schemata_manager):
-        "Test basic functioning of loading and parsing the schema files."
+        "Test basic functioning of loading and parsing the schemata files."
 
         assert loaded_schemata_manager.schemata['datasets'] \
             .export_schema()['datasets']['gmb']['1.0.2']['published'] == datetime.date(2019, 12, 19)
@@ -57,11 +57,11 @@ class TestSchemata:
 class TestSchemataManager:
     "Test the functionality of the SchemataManager class."
 
-    def test_schema_manager_value(self):
+    def test_schemata_manager_value(self):
         "Test SchemataManager to make sure it raises an exception when it recieves a non-Schemata object"
 
         with pytest.raises(TypeError) as e:
-            SchemataManager(dataset_schema='apple',
-                            format_schema='1',
-                            license_schema='3.3')
+            SchemataManager(dataset_schemata='apple',
+                            format_schemata='1',
+                            license_schemata='3.3')
         assert str(e.value) == 'val must be a BaseSchemata instance.'

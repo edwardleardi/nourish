@@ -144,8 +144,8 @@ def untrust_self_signed_cert(local_https_server):
 @pytest.fixture(autouse=True)
 def nourish_initialization(schemata_file_https_url, schema_localized_url):
     """Create the default initialization used for all tests. This is mainly for having a uniform initialization for all
-    tests as well as avoiding using the actual default schema file URLs so as to decouple the two lines of development
-    (default schema files and this library). It also replaces all download URLs with localized URLs."""
+    tests as well as avoiding using the actual default schemata file URLs so as to decouple the two lines of development
+    (default schemata files and this library). It also replaces all download URLs with localized URLs."""
 
     init(update_only=False,
          DATASET_SCHEMATA_URL=f'{schemata_file_https_url}/datasets.yaml',
@@ -192,15 +192,15 @@ def _download_dataset(dataset_dir, _loaded_schemata_manager) -> Callable[[str], 
         # file to be archived in a different compression format.
         local_destination = dataset_dir / f'{name}-{version}.tar.gz'
 
-        schema = _loaded_schemata_manager.schemata['datasets'].export_schema('datasets', name, version)
+        dataset_schema = _loaded_schemata_manager.schemata['datasets'].export_schema('datasets', name, version)
 
         if local_destination.exists() and \
-           hashlib.sha512(local_destination.read_bytes()).hexdigest() == schema['sha512sum']:
+           hashlib.sha512(local_destination.read_bytes()).hexdigest() == dataset_schema['sha512sum']:
             # The file has been completely downloaded before
             return
 
         # We use urllib instead of requests to avoid running the same code path with our downloading implementation
-        urlretrieve(schema['download_url'], filename=local_destination)
+        urlretrieve(dataset_schema['download_url'], filename=local_destination)
 
     return _download_dataset_impl
 
@@ -287,35 +287,35 @@ def wikitext103_schema(_wikitext103_schema):
 
 @pytest.fixture(scope='session')
 def schemata_file_absolute_dir() -> Path:
-    "The base of the absolute path to the dir that contains test schema files."
+    "The base of the absolute path to the dir that contains test schemata files."
 
     return Path.cwd() / 'tests' / 'schemata'
 
 
 @pytest.fixture(scope='session')
 def schemata_file_relative_dir() -> Path:
-    "The base of the relative path to the dir that contains test schema files."
+    "The base of the relative path to the dir that contains test schemata files."
 
     return Path('tests/schemata')
 
 
 @pytest.fixture(scope='session')
 def schemata_file_file_url(schemata_file_absolute_dir) -> str:
-    "The base of file:// schema file URLs."
+    "The base of file:// schemata file URLs."
 
     return schemata_file_absolute_dir.as_uri()
 
 
 @pytest.fixture(scope='session')
 def schemata_file_http_url(local_http_server_root_url) -> str:
-    "The base of remote http:// test schema file URLs."
+    "The base of remote http:// test schemata file URLs."
 
     return f"{local_http_server_root_url}/tests/schemata"
 
 
 @pytest.fixture(scope='session')
 def schemata_file_https_url(local_https_server_root_url) -> str:
-    "The base of remote https:// test schema file URLs."
+    "The base of remote https:// test schemata file URLs."
 
     return f"{local_https_server_root_url}/tests/schemata"
 

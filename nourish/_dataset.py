@@ -40,7 +40,7 @@ from ._lock import DirectoryLock
 class Dataset:
     """Models a particular dataset version along with download & load functionality.
 
-    :param schema: Schema dict of a particular dataset version.
+    :param schema: :data:`nourish.schema.SchemaDict` of a particular dataset version.
     :param data_dir: Directory to/from which the dataset should be downloaded/loaded from. The path can be either
         absolute or relative to the current working directory, but will be converted to the absolute path immediately
         upon initialization.
@@ -54,10 +54,10 @@ class Dataset:
     >>> from tempfile import TemporaryDirectory
     >>> import nourish
     >>> from nourish import schema
-    >>> dataset_schema = schema.DatasetSchemata('./tests/schemata/datasets.yaml')
-    >>> jfk_schema_dict = dataset_schema.export_schema('datasets', 'noaa_jfk', '1.1.4')
+    >>> dataset_schemata = schema.DatasetSchemata('./tests/schemata/datasets.yaml')
+    >>> jfk_schema = dataset_schemata.export_schema('datasets', 'noaa_jfk', '1.1.4')
     >>> jfk_data_dir = TemporaryDirectory()
-    >>> jfk_dataset = Dataset(schema=jfk_schema_dict, data_dir=jfk_data_dir.name)
+    >>> jfk_dataset = Dataset(schema=jfk_schema, data_dir=jfk_data_dir.name)
     >>> jfk_dataset.download()
     >>> data = jfk_dataset.load()
     >>> data['jfk_weather_cleaned'].shape

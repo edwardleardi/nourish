@@ -15,7 +15,7 @@
 # limitations under the License.
 #
 
-"Schema parsing and loading functionality."
+"Schemata parsing and loading functionality."
 
 
 from ._schema import DatasetSchemata, FormatSchemata, LicenseSchemata, BaseSchemata, SchemaDict, SchemataManager

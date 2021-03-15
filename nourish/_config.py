@@ -30,7 +30,7 @@ class Config:
     """Global read-only configurations for Nourish.
     """
 
-    # Default schema URLs
+    # Default schemata URLs
     # TODO: The types below should be typing_.PathLike. However, pydantic does not play well with os.PathLike for
     # validation. Will have to fix it in another occasion.
     DATASET_SCHEMATA_URL: Union[str, pathlib.Path] = \

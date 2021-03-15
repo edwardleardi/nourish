@@ -23,8 +23,8 @@ from nourish.exceptions import InsecureConnectionError
 from nourish._schema_retrieval import retrieve_schemata_file
 
 
-class TestSchemaRetrieval:
-    "Test schema retrieval."
+class TestSchemataRetrieval:
+    "Test schemata retrieval."
 
     # We set tls_verification to False in this test. We don't test raising this warning because it is not within the
     # project's scope to guarantee that this warning will raise, and this warning raises only once, which means that
@@ -36,8 +36,8 @@ class TestSchemaRetrieval:
                               'file_url',
                               'http_url',
                               'https_url'))
-    def test_custom_schema_insecure(self, location_type, schemata_file_relative_dir, request):
-        "Test retrieving user-specified schema files, with insecure connections allowed."
+    def test_custom_schemata_insecure(self, location_type, schemata_file_relative_dir, request):
+        "Test retrieving user-specified schemata files, with insecure connections allowed."
 
         # We use '/' instead of os.path.sep because URLs only accept / not \ as separators, but Windows path accepts
         # both. This is not an issue for the purpose of this test.
@@ -60,8 +60,8 @@ class TestSchemaRetrieval:
             retrieve_schemata_file(base + 'formats-utf-16be.yaml', encoding='utf-8', tls_verification=False)
         assert "'utf-8' codec can't decode byte 0x90" in str(e.value)
 
-    def test_invalid_schema(self):
-        "Test retrieving user-specified invalid schema files."
+    def test_invalid_schemata(self):
+        "Test retrieving user-specified invalid schemata files."
 
         with pytest.raises(ValueError) as e:
             retrieve_schemata_file(url_or_path='ftp://ftp/is/unsupported')
@@ -69,8 +69,8 @@ class TestSchemaRetrieval:
         assert str(e.value) == 'Unknown scheme in "ftp://ftp/is/unsupported": "ftp"'
 
 
-class TestSecureSchemaRetrieval:
-    "Common tests that mainly concern securely retrieving schema files."
+class TestSecureSchemataRetrieval:
+    "Common tests that mainly concern securely retrieving schemata files."
 
     @pytest.fixture(params=('http_url', 'https_url'))
     def remote_dataset_schemata_url(self, request) -> str:
@@ -98,9 +98,9 @@ class TestSecureSchemaRetrieval:
         assert retrieve_schemata_file(dataset_schemata_url_or_path, tls_verification=True) == \
             (schemata_file_relative_dir / 'datasets.yaml').read_text(encoding='utf-8')
 
-    def test_secure_connections_succeed_schema(self,
-                                               dataset_schemata_url_or_path,
-                                               schemata_file_relative_dir):
+    def test_secure_connections_succeed_schemata(self,
+                                                 dataset_schemata_url_or_path,
+                                                 schemata_file_relative_dir):
         "Test secure connections that should succeed for ``BaseSchemata()``."
         assert BaseSchemata(dataset_schemata_url_or_path, tls_verification=True).retrieved_url_or_path == \
                dataset_schemata_url_or_path
