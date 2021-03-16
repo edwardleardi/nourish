@@ -114,7 +114,7 @@ class TestSecureSchemataRetrieval:
 
         # Insecure load succeeds, no exception raised
         load_schemata_manager(force_reload=True, tls_verification=False)
-        assert export_schemata_manager().schemata['datasets'].retrieved_url_or_path == remote_dataset_schemata_url
+        assert export_schemata_manager().dataset_schemata.retrieved_url_or_path == remote_dataset_schemata_url
 
     def test_secure_connections_succeed_load_schemata_manager(self, dataset_schemata_url_or_path):
         "Test secure connections that should succeed for :func:`nourish.load_schemata_manager`."
@@ -122,7 +122,7 @@ class TestSecureSchemataRetrieval:
         # both. This is not an issue for the purpose of this test.
         init(update_only=True, DATASET_SCHEMATA_URL=dataset_schemata_url_or_path)
         load_schemata_manager(force_reload=True, tls_verification=True)
-        assert export_schemata_manager().schemata['datasets'].retrieved_url_or_path == dataset_schemata_url_or_path
+        assert export_schemata_manager().dataset_schemata.retrieved_url_or_path == dataset_schemata_url_or_path
 
     @pytest.mark.parametrize('caller', (retrieve_schemata_file, BaseSchemata.__init__, load_schemata_manager))
     def test_default_tls_verification(self, caller):

@@ -30,7 +30,7 @@ from packaging.version import parse as version_parser
 from ._config import Config
 from ._dataset import Dataset
 from . import typing as typing_
-from ._schema import BaseSchemata, SchemaDict, SchemataManager
+from ._schema import DatasetSchemata, FormatSchemata, LicenseSchemata, SchemaDict, SchemataManager
 
 # Global configurations --------------------------------------------------
 
@@ -99,7 +99,7 @@ def list_all_datasets() -> Dict[str, Tuple]:
     {...'gmb': ('1.0.2',),... 'wikitext103': ('1.0.1',)...}
     """
 
-    dataset_schemas = export_schemata_manager().schemata['datasets'].export_schema('datasets')
+    dataset_schemas = export_schemata_manager().dataset_schemata.export_schema('datasets')
     return {
         outer_k: tuple(inner_k for inner_k, inner_v in outer_v.items())
         for outer_k, outer_v in dataset_schemas.items()
@@ -186,7 +186,7 @@ def load_dataset(name: str, *,
     2 2010-01-01 03:00:00               5.0                33.0
     """
 
-    dataset_schemata = export_schemata_manager().schemata['datasets']
+    dataset_schemata = export_schemata_manager().dataset_schemata
     schema = dataset_schemata.export_schema('datasets', name, version)
     dataset_schemata_name = dataset_schemata.export_schema().get('name', 'default')
 
@@ -229,7 +229,7 @@ def get_dataset_metadata(name: str, *, version: str = 'latest') -> SchemaDict:
                          'path': 'groningen_meaning_bank_modified/gmb_subset_full.txt'}}
     """
 
-    return export_schemata_manager().schemata['datasets'].export_schema('datasets', name, version)
+    return export_schemata_manager().dataset_schemata.export_schema('datasets', name, version)
 
 
 @_handle_name_param
@@ -255,8 +255,8 @@ def describe_dataset(name: str, *, version: str = 'latest') -> str:
     """
 
     schemata_manager = export_schemata_manager()
-    dataset_schema = schemata_manager.schemata['datasets'].export_schema('datasets', name, version)
-    license_schemas = schemata_manager.schemata['licenses'].export_schema('licenses')
+    dataset_schema = schemata_manager.dataset_schemata.export_schema('datasets', name, version)
+    license_schemas = schemata_manager.license_schemata.export_schema('licenses')
     return dedent(f'''
             Dataset name: {dataset_schema["name"]}
             Description: {dataset_schema["description"]}
@@ -287,7 +287,7 @@ def export_schemata_manager() -> SchemataManager:
 
 def load_schemata_manager(*, force_reload: bool = False,
                           tls_verification: Union[bool, typing_.PathLike] = True) -> None:
-    """Loads a :class:`schema.SchemataManager` object that stores the schemata. To export the loaded
+    """Loads a :class:`schema.SchemataManager` object that stores the default schemata. To export the loaded
     :class:`schema.SchemataManager` object, please use :func:`export_schemata_manager`.
 
     :param force_reload: If ``True``, force reloading even if the provided URLs by :func:`init` are the same as
@@ -303,27 +303,34 @@ def load_schemata_manager(*, force_reload: bool = False,
     {'datasets': ..., 'formats': ..., 'licenses':...}
     """
 
-    urls = {
-        'datasets': get_config().DATASET_SCHEMATA_URL,
-        'formats': get_config().FORMAT_SCHEMATA_URL,
-        'licenses': get_config().LICENSE_SCHEMATA_URL
-    }
-
     global _schemata_manager
     if force_reload or _schemata_manager is None:  # Force reload or clean slate, create a new SchemataManager object
-        _schemata_manager = SchemataManager(**{
-            name: BaseSchemata(url, tls_verification=tls_verification) for name, url in urls.items()})
+        _schemata_manager = SchemataManager(
+            datasets=DatasetSchemata(get_config().DATASET_SCHEMATA_URL, tls_verification=tls_verification),
+            formats=FormatSchemata(get_config().FORMAT_SCHEMATA_URL, tls_verification=tls_verification),
+            licenses=LicenseSchemata(get_config().LICENSE_SCHEMATA_URL, tls_verification=tls_verification))
+
     else:
-        for name, schemata in _schemata_manager.schemata.items():
-            if schemata.retrieved_url_or_path != urls[name]:
-                _schemata_manager.add_schemata(name, BaseSchemata(urls[name], tls_verification=tls_verification))
+        if _schemata_manager.dataset_schemata.retrieved_url_or_path != get_config().DATASET_SCHEMATA_URL:
+            _schemata_manager.update_schemata(
+                'datasets', DatasetSchemata(get_config().DATASET_SCHEMATA_URL, tls_verification=tls_verification))
+
+        if _schemata_manager.format_schemata.retrieved_url_or_path != get_config().FORMAT_SCHEMATA_URL:
+            _schemata_manager.update_schemata(
+                'formats', FormatSchemata(get_config().FORMAT_SCHEMATA_URL, tls_verification=tls_verification))
+
+        if _schemata_manager.license_schemata.retrieved_url_or_path != get_config().LICENSE_SCHEMATA_URL:
+            _schemata_manager.update_schemata(
+                'licenses', LicenseSchemata(get_config().LICENSE_SCHEMATA_URL, tls_verification=tls_verification))
 
 
 def _get_schemata_manager() -> SchemataManager:
-    """Return the :class:`SchemataManager` object managed by high-level functions. If it is not created, create it. This
-    function is used by high-level APIs but it should not be a high-level function itself. It should only be used
-    internally when the need to modify the managed :class`SchemataManager` object arises. It should not be exposed for
-    the same reason: users should not have this easy access to modify the managed :class`SchemataManager` object."""
+    """Return the :class:`SchemataManager` object managed by high-level functions. If it is not created, create it.
+    This function is used by high-level APIs but it should not be a high-level function itself. It should only be
+    used internally when the need to modify the managed :class:`schema.SchemataManager` object arises. It should not
+    be exposed for the same reason: users should not have this easy access to modify the managed
+    :class:`schema.SchemataManager` object.
+    """
 
     global _schemata_manager
 

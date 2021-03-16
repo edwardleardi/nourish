@@ -44,14 +44,14 @@ class TestSchemata:
     def test_loading_schemata(self, loaded_schemata_manager):
         "Test basic functioning of loading and parsing the schemata files."
 
-        assert loaded_schemata_manager.schemata['datasets'] \
+        assert loaded_schemata_manager.dataset_schemata \
             .export_schema()['datasets']['gmb']['1.0.2']['published'] == datetime.date(2019, 12, 19)
-        assert loaded_schemata_manager.schemata['licenses'] \
+        assert loaded_schemata_manager.license_schemata \
             .export_schema()['licenses']['cdla_sharing']['commercial_use'] is True
-        assert loaded_schemata_manager.schemata['formats'] \
+        assert loaded_schemata_manager.format_schemata \
             .export_schema('formats', 'csv', 'name') == 'Comma-Separated Values'
-        assert loaded_schemata_manager.schemata['datasets'].export_schema()['datasets']['gmb']['1.0.2']['homepage'] == \
-            loaded_schemata_manager.schemata['datasets'].export_schema('datasets', 'gmb', '1.0.2', 'homepage')
+        assert loaded_schemata_manager.dataset_schemata.export_schema()['datasets']['gmb']['1.0.2']['homepage'] == \
+            loaded_schemata_manager.dataset_schemata.export_schema('datasets', 'gmb', '1.0.2', 'homepage')
 
 
 class TestSchemataManager:
@@ -61,7 +61,15 @@ class TestSchemataManager:
         "Test SchemataManager to make sure it raises an exception when it recieves a non-Schemata object"
 
         with pytest.raises(TypeError) as e:
-            SchemataManager(dataset_schemata='apple',
-                            format_schemata='1',
-                            license_schemata='3.3')
-        assert str(e.value) == 'val must be a BaseSchemata instance.'
+            SchemataManager(datasets='apple',
+                            formats='1',
+                            licenses='3.3')
+        assert str(e.value) == 'schemata must be a BaseSchemata (or subclass of BaseSchemata) instance.'
+
+    def test_update_schemata(self, loaded_schemata_manager):
+        "Test update_schemata method to make sure it raises an exception when an invalid schemata is updated."
+
+        datasets = loaded_schemata_manager.dataset_schemata
+        with pytest.raises(KeyError) as e:
+            loaded_schemata_manager.update_schemata('invalid_datasets_name', datasets)
+        assert str(e.value) == "\'name must be one of datasets, formats, or licenses.\'"
