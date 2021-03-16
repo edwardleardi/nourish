@@ -25,7 +25,7 @@ from typing import Any, Dict, Union
 import yaml
 
 from . import typing as typing_
-from ._schema_retrieval import retrieve_schemata_file
+from ._schemata_retrieval import retrieve_schemata_file
 
 
 SchemaDict = Dict[str, Any]
