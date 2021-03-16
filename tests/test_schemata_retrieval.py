@@ -20,7 +20,7 @@ import pytest
 from nourish import export_schemata_manager, init, load_schemata_manager
 from nourish.schema import BaseSchemata
 from nourish.exceptions import InsecureConnectionError
-from nourish._schema_retrieval import retrieve_schemata_file
+from nourish._schemata_retrieval import retrieve_schemata_file
 
 
 class TestSchemataRetrieval:

@@ -22,7 +22,7 @@ import requests.exceptions
 
 from nourish import init
 from nourish._config import Config
-from nourish._schema_retrieval import retrieve_schemata_file
+from nourish._schemata_retrieval import retrieve_schemata_file
 
 
 class TestConfig:
@@ -48,8 +48,8 @@ class TestConfig:
         # more regularly than the library. For this reason, we also verify the default schemata URLs are also valid
         # https links in ``test_default_schemata_url_https``.
 
-        # This test is in `test_config.py` not in `test_schema_retrieval.py` because this test is more about the content
-        # of the default schemata URLs than the retrieving functionality.
+        # This test is in `test_config.py` not in `test_schemata_retrieval.py` because this test is more about the
+        # content of the default schemata URLs than the retrieving functionality.
         assert len(retrieve_schemata_file(Config.DATASET_SCHEMATA_URL)) > 0
         assert len(retrieve_schemata_file(Config.FORMAT_SCHEMATA_URL)) > 0
         assert len(retrieve_schemata_file(Config.LICENSE_SCHEMATA_URL)) > 0
