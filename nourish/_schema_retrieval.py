@@ -15,7 +15,7 @@
 # limitations under the License.
 #
 
-"Retrieve remote schema file."
+"Retrieve remote schemata file."
 
 
 from pathlib import Path
@@ -32,16 +32,16 @@ from .exceptions import InsecureConnectionError
 
 
 # Semantically, typing_.PathLike doesn't cover strings that represent URLs
-def retrieve_schema_file(url_or_path: Union[typing_.PathLike, str], *,
-                         encoding: str = 'utf-8',
-                         tls_verification: Union[bool, typing_.PathLike] = True) -> str:
-    """Retrieve a single schema file.
+def retrieve_schemata_file(url_or_path: Union[typing_.PathLike, str], *,
+                           encoding: str = 'utf-8',
+                           tls_verification: Union[bool, typing_.PathLike] = True) -> str:
+    """Retrieve a single schemata file.
 
-    :param url_or_path: URL or path to the schema file.
+    :param url_or_path: URL or path to the schemata file.
     :param encoding: The encoding of the text in ``url_or_path``.
-    :param tls_verification: Same as ``tls_verification`` in :class:`nourish.Schema`.
-    :raises ValueError: See :class:`nourish.Schema`.
-    :raises InsecureConnectionError: See :class:`nourish.Schema`.
+    :param tls_verification: Same as ``tls_verification`` in :class:`nourish.BaseSchemata`.
+    :raises ValueError: See :class:`nourish.BaseSchemata`.
+    :raises InsecureConnectionError: See :class:`nourish.BaseSchemata`.
     :return: A string of the content.
     """
 

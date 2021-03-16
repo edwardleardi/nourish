@@ -101,7 +101,7 @@ To view your globally set configs for Nourish, such as your default data directo
 .. code-block:: python
 
    >>> nourish.get_config()
-   Config(DATADIR=PosixPath('dir/to/dowload/load/from'), ..., DATASET_SCHEMA_URL='file/to/load/datasets/from')
+   Config(DATADIR=PosixPath('dir/to/dowload/load/from'), ..., DATASET_SCHEMATA_URL='file/to/load/datasets/from')
 
 By default, :func:`nourish.load_dataset` downloads to and loads from
 :file:`~/.nourish/data/<dataset-name>/<dataset-version>/`. To change the default data directory, use :func:`nourish.init`.

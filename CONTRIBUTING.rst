@@ -121,6 +121,23 @@ to :file:`tox.ini` and their respective test files in :file:`tests/`.
 Development
 -----------
 
+Schema vs Schemata
+~~~~~~~~~~~~~~~~~~
+
+When creating variables that hold schema information, we use the following naming conventions to minimize confusion between
+what we typically refer to as a ``schema``, and what we typically refer to as a ``schemata``:
+
+- **schemata** = refers to the YAML file or the YAML file's full contents
+   - A schemata is a YAML file composed of some header information and content in the form of schemas, e.g. the dataset schemata is composed of some header metadata (i.e. ``api_name``, ``name``, and ``last_updated``) and a collection of dataset schemas (i.e. the value returned by the ``datasets`` key).
+   - When referring to the YAML file or its full contents, we use ``schemata`` in the name, e.g. ``dataset_schemata``, ``license_schemata``, or ``format_schemata``.
+
+- **schema** = refers to a unit within the YAML file's contents
+   - A schema is a unit of the content of a schemata, e.g. the metadata of a particular versioned dataset from a dataset schemata, used to instantiate a ``Dataset`` class.
+   - When referring to the schema for a certain (or generic) dataset, license, or format, we use ``schema`` in the name, e.g. ``dataset_schema``, or ``gmb_schema``.
+   - Schemas in the plural refers to a dictionary composed of all the schemas in a schemata without the schemata's header information, e.g. ``license_schemas`` would refer to the value returned by the ``licenses`` key from the licenses schemata.
+
+Note: for type checking purposes, both a schema and a schemata in dictionary form can be of custom type ``SchemaDict``
+
 Where to Expose a Symbol (Function, Class, etc.)?
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 

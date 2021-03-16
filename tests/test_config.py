@@ -22,34 +22,34 @@ import requests.exceptions
 
 from nourish import init
 from nourish._config import Config
-from nourish._schema_retrieval import retrieve_schema_file
+from nourish._schema_retrieval import retrieve_schemata_file
 
 
 class TestConfig:
     "Test the Config dataclass."
 
-    def test_default_schema_url_https(self):
-        "Test the default schema URLs are https-schemed."
+    def test_default_schemata_url_https(self):
+        "Test the default schemata URLs are https-schemed."
 
-        assert urlparse(Config.DATASET_SCHEMA_URL).scheme == 'https'
-        assert urlparse(Config.FORMAT_SCHEMA_URL).scheme == 'https'
-        assert urlparse(Config.LICENSE_SCHEMA_URL).scheme == 'https'
+        assert urlparse(Config.DATASET_SCHEMATA_URL).scheme == 'https'
+        assert urlparse(Config.FORMAT_SCHEMATA_URL).scheme == 'https'
+        assert urlparse(Config.LICENSE_SCHEMATA_URL).scheme == 'https'
 
     @pytest.mark.xfail(reason="default remote might be down but it's not this library's issue",
                        raises=requests.exceptions.ConnectionError)
-    def test_default_schema_url_content(self):
+    def test_default_schemata_url_content(self):
         """Test the content of the remote URLs a bit. We only assert them not being None here just in case the server
         returns zero-length files."""
 
         init(update_only=False)
 
         # We only assert that we have retrieved some non-empty files in this test. This is because we want to decouple
-        # the maintenance of schema files in production with the library development. These files likely would change
-        # more regularly than the library. For this reason, we also verify the default schema URLs are also valid https
-        # links in ``test_default_schema_url_https``.
+        # the maintenance of schemata files in production with the library development. These files likely would change
+        # more regularly than the library. For this reason, we also verify the default schemata URLs are also valid
+        # https links in ``test_default_schemata_url_https``.
 
         # This test is in `test_config.py` not in `test_schema_retrieval.py` because this test is more about the content
-        # of the default schema URLs than the retrieving functionality.
-        assert len(retrieve_schema_file(Config.DATASET_SCHEMA_URL)) > 0
-        assert len(retrieve_schema_file(Config.FORMAT_SCHEMA_URL)) > 0
-        assert len(retrieve_schema_file(Config.LICENSE_SCHEMA_URL)) > 0
+        # of the default schemata URLs than the retrieving functionality.
+        assert len(retrieve_schemata_file(Config.DATASET_SCHEMATA_URL)) > 0
+        assert len(retrieve_schemata_file(Config.FORMAT_SCHEMATA_URL)) > 0
+        assert len(retrieve_schemata_file(Config.LICENSE_SCHEMATA_URL)) > 0

@@ -20,13 +20,13 @@
 
 from . import dataset, exceptions, loaders, schema
 from ._high_level import (describe_dataset,
-                          export_schemata,
+                          export_schemata_manager,
                           get_config,
                           get_dataset_metadata,
                           init,
                           list_all_datasets,
                           load_dataset,
-                          load_schemata)
+                          load_schemata_manager)
 from ._version import version as __version__
 
 __all__ = (
@@ -37,13 +37,13 @@ __all__ = (
            'schema',
            # high-level functions
            'describe_dataset',
-           'export_schemata',
+           'export_schemata_manager',
            'get_config',
            'get_dataset_metadata',
            'init',
            'list_all_datasets',
            'load_dataset',
-           'load_schemata',
+           'load_schemata_manager',
            # _version
            '__version__'
 )

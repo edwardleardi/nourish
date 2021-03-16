@@ -31,9 +31,9 @@ import certifi
 import pytest
 
 from nourish import init
-from nourish._high_level import _get_schemata
+from nourish._high_level import _get_schemata_manager
 from nourish.dataset import Dataset
-from nourish.schema import Schema, SchemaDict, SchemaManager
+from nourish.schema import BaseSchemata, SchemaDict, SchemataManager
 
 # Basic utilities --------------------------------
 
@@ -142,18 +142,18 @@ def untrust_self_signed_cert(local_https_server):
 
 
 @pytest.fixture(autouse=True)
-def nourish_initialization(schema_file_https_url, schema_localized_url):
+def nourish_initialization(schemata_file_https_url, schema_localized_url):
     """Create the default initialization used for all tests. This is mainly for having a uniform initialization for all
-    tests as well as avoiding using the actual default schema file URLs so as to decouple the two lines of development
-    (default schema files and this library). It also replaces all download URLs with localized URLs."""
+    tests as well as avoiding using the actual default schemata file URLs so as to decouple the two lines of development
+    (default schemata files and this library). It also replaces all download URLs with localized URLs."""
 
     init(update_only=False,
-         DATASET_SCHEMA_URL=f'{schema_file_https_url}/datasets.yaml',
-         FORMAT_SCHEMA_URL=f'{schema_file_https_url}/formats.yaml',
-         LICENSE_SCHEMA_URL=f'{schema_file_https_url}/licenses.yaml')
+         DATASET_SCHEMATA_URL=f'{schemata_file_https_url}/datasets.yaml',
+         FORMAT_SCHEMATA_URL=f'{schemata_file_https_url}/formats.yaml',
+         LICENSE_SCHEMATA_URL=f'{schemata_file_https_url}/licenses.yaml')
 
     # Use local dataset locations by default in our tests
-    datasets = _get_schemata().schemata['datasets']._schema['datasets']
+    datasets = _get_schemata_manager().schemata['datasets']._schemata['datasets']
     for name, versions in datasets.items():
         for version in versions:
             datasets[name][version] = schema_localized_url(name, version)
@@ -179,28 +179,28 @@ def dataset_dir() -> Path:
 
 
 @pytest.fixture(scope='session')
-def _download_dataset(dataset_dir, _loaded_schemata) -> Callable[[str], None]:
+def _download_dataset(dataset_dir, _loaded_schemata_manager) -> Callable[[str], None]:
     """Utility function for downloading datasets to ``tests/datasets/{name}-{version}`` for testing purpose. These files
     will not be deleted after the test session terminates, and they are cached for future test sessions. Accordingly, if
     ``tests/datasets/{name}-{version}`` is already present, this fixture does nothing.
     """
-    # We use _loaded_schemata instead of loaded_schemata to avoid scope mismatch error (a session-scoped fixture can't
-    # call a function-scoped fixture)
+    # We use _loaded_schemata_manager instead of loaded_schemata_manager to avoid scope mismatch error (a session-scoped
+    # fixture can't call a function-scoped fixture)
 
     def _download_dataset_impl(name, version):
         # we drop the 'tar.gz' extension here -- our package should work regardless of the extension, and we allow the
         # file to be archived in a different compression format.
         local_destination = dataset_dir / f'{name}-{version}.tar.gz'
 
-        schema = _loaded_schemata.schemata['datasets'].export_schema('datasets', name, version)
+        dataset_schema = _loaded_schemata_manager.schemata['datasets'].export_schema('datasets', name, version)
 
         if local_destination.exists() and \
-           hashlib.sha512(local_destination.read_bytes()).hexdigest() == schema['sha512sum']:
+           hashlib.sha512(local_destination.read_bytes()).hexdigest() == dataset_schema['sha512sum']:
             # The file has been completely downloaded before
             return
 
         # We use urllib instead of requests to avoid running the same code path with our downloading implementation
-        urlretrieve(schema['download_url'], filename=local_destination)
+        urlretrieve(dataset_schema['download_url'], filename=local_destination)
 
     return _download_dataset_impl
 
@@ -208,14 +208,15 @@ def _download_dataset(dataset_dir, _loaded_schemata) -> Callable[[str], None]:
 
 
 @pytest.fixture(scope='session')
-def schema_localized_url(_loaded_schemata, _download_dataset, dataset_base_url) -> Callable[[str, str], SchemaDict]:
+def schema_localized_url(_loaded_schemata_manager,
+                         _download_dataset, dataset_base_url) -> Callable[[str, str], SchemaDict]:
     "Utility function fixture for generating schema fixtures with its downloading URL modified to the local HTTPS URL."
-    # We use _loaded_schemata instead of loaded_schemata to avoid scope mismatch error (a session-scoped fixture can't
-    # call a function-scoped fixture)
+    # We use _loaded_schemata_manager instead of loaded_schemata_manager to avoid scope mismatch error (a session-scoped
+    # fixture can't call a function-scoped fixture)
 
     def _schema_localized_url_impl(name, version):
         _download_dataset(name, version)
-        schema = _loaded_schemata.schemata['datasets'].export_schema('datasets', name, version)
+        schema = _loaded_schemata_manager.schemata['datasets'].export_schema('datasets', name, version)
         schema['download_url'] = str(f'{dataset_base_url}/{name}-{version}.tar.gz')
         return schema
 
@@ -223,26 +224,26 @@ def schema_localized_url(_loaded_schemata, _download_dataset, dataset_base_url) 
 
 
 @pytest.fixture(scope='session')
-def _loaded_schemata(schema_file_relative_dir) -> SchemaManager:
-    """A loaded ``SchemaManager`` object, but this should never be modified. This object manages ``Schema`` objects
+def _loaded_schemata_manager(schemata_file_relative_dir) -> SchemataManager:
+    """A loaded ``SchemataManager`` object, but this should never be modified. This object manages ``BaseSchemata`` objects
     corresponding to ``tests/{datasets,formats,licenses}.yaml``. Note that these are not necessarily the same as the
     ones used in other schema fixtures, so please do not assume that it is equal to other schema fixtures. One purpose
-    of this fixture is to reduce repeated call in the test to the same function when ``loaded_schemata`` is used. The
-    other purpose is to provide other session-scoped fixtures access to the loaded schemata, because session-scoped
-    fixtures can't load function-scoped fixtures.
+    of this fixture is to reduce repeated call in the test to the same function when ``loaded_schemata_manager`` is
+    used. The other purpose is to provide other session-scoped fixtures access to the loaded schemata, because
+    session-scoped fixtures can't load function-scoped fixtures.
     """
 
-    return SchemaManager(datasets=Schema(schema_file_relative_dir / 'datasets.yaml'),
-                         formats=Schema(schema_file_relative_dir / 'formats.yaml'),
-                         licenses=Schema(schema_file_relative_dir / 'licenses.yaml'))
+    return SchemataManager(datasets=BaseSchemata(schemata_file_relative_dir / 'datasets.yaml'),
+                           formats=BaseSchemata(schemata_file_relative_dir / 'formats.yaml'),
+                           licenses=BaseSchemata(schemata_file_relative_dir / 'licenses.yaml'))
 
 
 @pytest.fixture
-def loaded_schemata(_loaded_schemata) -> SchemaManager:
-    """A copy of _loaded_schemata. Tests outside this file should always use this one so as to avoid mistakenly
+def loaded_schemata_manager(_loaded_schemata_manager) -> SchemataManager:
+    """A copy of _loaded_schemata_manager. Tests outside this file should always use this one so as to avoid mistakenly
     modifying the content."""
 
-    return copy.deepcopy(_loaded_schemata)
+    return copy.deepcopy(_loaded_schemata_manager)
 
 
 # Every _*_schema fixture also implies that a session wide test dataset file is downloaded. They should only be read
@@ -281,40 +282,40 @@ def wikitext103_schema(_wikitext103_schema):
     return copy.deepcopy(_wikitext103_schema)
 
 
-# Schema file locations fixture --------------------------------------
+# Schemata file locations fixture --------------------------------------
 
 
 @pytest.fixture(scope='session')
-def schema_file_absolute_dir() -> Path:
-    "The base of the absolute path to the dir that contains test schema files."
+def schemata_file_absolute_dir() -> Path:
+    "The base of the absolute path to the dir that contains test schemata files."
 
     return Path.cwd() / 'tests' / 'schemata'
 
 
 @pytest.fixture(scope='session')
-def schema_file_relative_dir() -> Path:
-    "The base of the relative path to the dir that contains test schema files."
+def schemata_file_relative_dir() -> Path:
+    "The base of the relative path to the dir that contains test schemata files."
 
     return Path('tests/schemata')
 
 
 @pytest.fixture(scope='session')
-def schema_file_file_url(schema_file_absolute_dir) -> str:
-    "The base of file:// schema file URLs."
+def schemata_file_file_url(schemata_file_absolute_dir) -> str:
+    "The base of file:// schemata file URLs."
 
-    return schema_file_absolute_dir.as_uri()
+    return schemata_file_absolute_dir.as_uri()
 
 
 @pytest.fixture(scope='session')
-def schema_file_http_url(local_http_server_root_url) -> str:
-    "The base of remote http:// test schema file URLs."
+def schemata_file_http_url(local_http_server_root_url) -> str:
+    "The base of remote http:// test schemata file URLs."
 
     return f"{local_http_server_root_url}/tests/schemata"
 
 
 @pytest.fixture(scope='session')
-def schema_file_https_url(local_https_server_root_url) -> str:
-    "The base of remote https:// test schema file URLs."
+def schemata_file_https_url(local_https_server_root_url) -> str:
+    "The base of remote https:// test schemata file URLs."
 
     return f"{local_https_server_root_url}/tests/schemata"
 
