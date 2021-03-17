@@ -116,34 +116,62 @@ class LicenseSchemata(BaseSchemata):
 
 
 class SchemataManager():
-    """Stores the loaded schemata in :attr:`schemata`.
+    """Stores and manages loaded schemata.
 
-    :param kwargs: Schemata name and BaseSchemata instance key-value pairs.
+    :param datasets: :class:`DatasetSchemata` instance.
+    :param formats: :class:`FormatSchemata` instance.
+    :param licenses: :class:`LicenseSchemata` instance.
 
     Example:
 
-    >>> dataset_schemata = DatasetSchemata('./tests/schemata/datasets.yaml')
-    >>> schemata_manager = SchemataManager(datasets=dataset_schemata)
-    >>> license_schemata = LicenseSchemata('./tests/schemata/licenses.yaml')
-    >>> schemata_manager.add_schemata('licenses', license_schemata)
+    >>> datasets = DatasetSchemata('./tests/schemata/datasets.yaml')
+    >>> formats = FormatSchemata('./tests/schemata/formats.yaml')
+    >>> licenses = LicenseSchemata('./tests/schemata/licenses.yaml')
+    >>> schemata_manager = SchemataManager(datasets=datasets, formats=formats, licenses=licenses)
     >>> schemata_manager.schemata
-    {'datasets':..., 'licenses':...}
+    {'datasets':..., 'formats':..., 'licenses':...}
     """
 
-    def __init__(self, **kwargs: BaseSchemata) -> None:
+    def __init__(self, datasets: DatasetSchemata, formats: FormatSchemata, licenses: LicenseSchemata) -> None:
         """Constructor method
         """
-        self.schemata: Dict[str, BaseSchemata] = {}
-        for name, val in kwargs.items():
-            self.add_schemata(name, val)
+        self.schemata: Dict[str, BaseSchemata] = {'datasets': datasets, 'formats': formats, 'licenses': licenses}
+        for schemata in self.schemata.values():
+            self.check_schemata(schemata)
 
-    def add_schemata(self, name: str, val: BaseSchemata) -> None:
-        """Store schemata instance in a dictionary. If a schemata with the same name as ``name`` is already stored,
-        it is overridden.
+    @property
+    def dataset_schemata(self) -> BaseSchemata:
+        "Loaded dataset schemata."
+        return self.schemata['datasets']
 
-        :param name: Schemata name.
-        :param val: BaseSchemata instance.
+    @property
+    def format_schemata(self) -> BaseSchemata:
+        "Loaded format schemata."
+        return self.schemata['formats']
+
+    @property
+    def license_schemata(self) -> BaseSchemata:
+        "Loaded license schemata."
+        return self.schemata['licenses']
+
+    def check_schemata(self, schemata: BaseSchemata) -> None:
+        """Check the given object to see if it is an instance of the :class:`BaseSchemata` class (or one of its
+        subclasses). Raise an error if it is not.
+
+        :param schemata: The object to be tested.
+        :raises TypeError: ``schemata`` is not a valid schemata object.
+        :return: No return unless the ``schemata`` is invalid, in which case see :class:`TypeError`.
         """
-        if not isinstance(val, BaseSchemata):
-            raise TypeError('val must be a BaseSchemata instance.')
-        self.schemata[name] = val
+        if not isinstance(schemata, BaseSchemata):
+            raise TypeError('schemata must be a BaseSchemata (or subclass of BaseSchemata) instance.')
+
+    def update_schemata(self, name: str, schemata: BaseSchemata) -> None:
+        """Update a schemata stored in :attr:`schemata` by overriding it with a new schemata.
+
+        :param name: Name of the schemata to update. One of ``datasets``, ``formats``, or ``licenses``.
+        :param schemata: A :class:`BaseSchemata` (or subclass) instance.
+        """
+        self.check_schemata(schemata)
+        if name not in self.schemata.keys():
+            raise KeyError('name must be one of datasets, formats, or licenses.')
+        self.schemata[name] = schemata

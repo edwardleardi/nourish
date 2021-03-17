@@ -33,7 +33,7 @@ import pytest
 from nourish import init
 from nourish._high_level import _get_schemata_manager
 from nourish.dataset import Dataset
-from nourish.schema import BaseSchemata, SchemaDict, SchemataManager
+from nourish.schema import DatasetSchemata, FormatSchemata, LicenseSchemata, SchemaDict, SchemataManager
 
 # Basic utilities --------------------------------
 
@@ -153,7 +153,7 @@ def nourish_initialization(schemata_file_https_url, schema_localized_url):
          LICENSE_SCHEMATA_URL=f'{schemata_file_https_url}/licenses.yaml')
 
     # Use local dataset locations by default in our tests
-    datasets = _get_schemata_manager().schemata['datasets']._schemata['datasets']
+    datasets = _get_schemata_manager().dataset_schemata._schemata['datasets']
     for name, versions in datasets.items():
         for version in versions:
             datasets[name][version] = schema_localized_url(name, version)
@@ -192,7 +192,7 @@ def _download_dataset(dataset_dir, _loaded_schemata_manager) -> Callable[[str], 
         # file to be archived in a different compression format.
         local_destination = dataset_dir / f'{name}-{version}.tar.gz'
 
-        dataset_schema = _loaded_schemata_manager.schemata['datasets'].export_schema('datasets', name, version)
+        dataset_schema = _loaded_schemata_manager.dataset_schemata.export_schema('datasets', name, version)
 
         if local_destination.exists() and \
            hashlib.sha512(local_destination.read_bytes()).hexdigest() == dataset_schema['sha512sum']:
@@ -216,7 +216,7 @@ def schema_localized_url(_loaded_schemata_manager,
 
     def _schema_localized_url_impl(name, version):
         _download_dataset(name, version)
-        schema = _loaded_schemata_manager.schemata['datasets'].export_schema('datasets', name, version)
+        schema = _loaded_schemata_manager.dataset_schemata.export_schema('datasets', name, version)
         schema['download_url'] = str(f'{dataset_base_url}/{name}-{version}.tar.gz')
         return schema
 
@@ -233,9 +233,9 @@ def _loaded_schemata_manager(schemata_file_relative_dir) -> SchemataManager:
     session-scoped fixtures can't load function-scoped fixtures.
     """
 
-    return SchemataManager(datasets=BaseSchemata(schemata_file_relative_dir / 'datasets.yaml'),
-                           formats=BaseSchemata(schemata_file_relative_dir / 'formats.yaml'),
-                           licenses=BaseSchemata(schemata_file_relative_dir / 'licenses.yaml'))
+    return SchemataManager(datasets=DatasetSchemata(schemata_file_relative_dir / 'datasets.yaml'),
+                           formats=FormatSchemata(schemata_file_relative_dir / 'formats.yaml'),
+                           licenses=LicenseSchemata(schemata_file_relative_dir / 'licenses.yaml'))
 
 
 @pytest.fixture
