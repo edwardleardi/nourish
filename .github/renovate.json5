@@ -16,7 +16,9 @@
 
 {
     "extends": [
-        "config:base"
+        "config:base",
+        ":gitSignOff",
+        ":reviewer(edwardleardi)"
     ],
 
     "pip_requirements": {
